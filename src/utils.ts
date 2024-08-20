@@ -14,10 +14,13 @@ export interface ExportedHandlerType {
   EMAIL_API_KEY: string
   EMAIL_API_URL: string
   EMAIL_API_FROM: string
+  DB_NAME: string
 }
 
+
+export type Router = Record<string, Record<string, (req: Request, env: ExportedHandlerType, App: Realm.App) => Promise<Response>>>;
 // ===== CONST  ================================================================
-export const DB_NAME = "cloudflare"
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
