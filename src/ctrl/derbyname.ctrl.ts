@@ -1,7 +1,9 @@
+import { Buffer } from 'node:buffer';
 import type { ObjectId } from "mongodb"
 import type { ExportedHandlerType } from "../utils"
 import * as utils from "../utils"
 import * as Realm from 'realm-web';
+import * as jose from 'jose'
 import { sendEmail } from "../emails/sender"
 
 const DERBYNAMES = "derbynames"
@@ -30,9 +32,6 @@ export const derbyNameController = {
   },
   async POST(req: Request, env: ExportedHandlerType, App: Realm.App) {
     const body = await req.json() as Derbyname
-    // ====================================
-    //todo controller les données
-    // ====================================
 
     const { name: _name, numRoster: _numRoster, email: _email, club:_club } = body
 
@@ -53,10 +52,25 @@ export const derbyNameController = {
       id: _club.id
     }
 
-    const player = { name, numRoster, email,club, emailConfirmed: false }
+    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString() 
+    const player = { name, numRoster, email,club, emailConfirmed: false, generatedCode  }
 
     if (!isNameValid || !isNumRosterValid || !isEmailValid || !club)
       return utils.toError("données invalides", 400)
+
+
+    // ====== Génération du token JWT ======
+    const secret = Buffer.from(env.JWT_SECRET, 'hex')
+    
+    const jwt = await new jose.EncryptJWT({
+      generatedCode
+    })
+      .setProtectedHeader({ alg: 'dir', enc: 'A128CBC-HS256' })
+      .setIssuedAt()
+      .setIssuer('derbynames.ovh_back')
+      .setAudience('derbynames.ovh_front')
+      .setExpirationTime('5m')
+      .encrypt(secret)
 
     const client = await utils.getClient(env, App)
     if (!client)
@@ -71,7 +85,14 @@ export const derbyNameController = {
         name
       }],
       subject: "Hello world !",
-      html: "<html><head></head><body><p>Hello,</p> --- This is my first transactional email sent from Brevo.</p></body></html>"
+      html: `<html><head></head><body>
+      <h1>DERBY NAMES</h1>
+      <h2>Confirmation de votre adresse email</h2>
+      <p>Bonjour ${name},</p>
+      <p>Vous avez récemment demandé à vous inscrire sur notre site. Pour confirmer votre adresse email, veuillez cliquer sur
+      le lien ci-dessous :</p>
+      <a href="http://derbynames.ovh/validate/${jwt}">Confirmer mon adresse email</a>
+      </body></html>`
     })
 
 

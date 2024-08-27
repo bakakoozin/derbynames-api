@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "ejs": "^3.1.10",
+    "jose": "^5.8.0",
     "realm-web": "^2.0.0"
   },
   "devDependencies": {

@@ -2,6 +2,7 @@ import * as Realm from 'realm-web';
 import * as utils from './utils';
 import { derbyNameController } from './ctrl/derbyname.ctrl';
 import { indexCtrl } from './ctrl/index.ctrl';
+import { validatedEmailController } from './ctrl/validate-email.ctrl';
 import type { ExportedHandlerType , Router} from './utils';
 
 
@@ -18,10 +19,13 @@ const worker: ExportedHandler<ExportedHandlerType> = {
     const method = req.method;
     const path = url.pathname.replace(/[/]$/, '');
 
+    if(method === "OPTIONS") return utils.toOptions()
+    
     const router: Router  = { 
       "": indexCtrl ,
       "/": indexCtrl ,
-      "/derbynames": derbyNameController 
+      "/derbynames": derbyNameController,
+      '/validate': validatedEmailController,
     }
     const controller = router?.[path]?.[method]
     return typeof controller === "function" ? await controller(req, env, App) : utils.toError("not found", 404)

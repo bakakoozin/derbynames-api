@@ -15,6 +15,7 @@ export interface ExportedHandlerType {
   EMAIL_API_URL: string
   EMAIL_API_FROM: string
   DB_NAME: string
+  JWT_SECRET: string
 }
 
 
@@ -35,6 +36,10 @@ export function toJSON(data: unknown, status = 200): Response {
   const body = JSON.stringify(data, null, 2);
   const headers = { 'content-type': 'application/json', ...corsHeaders, "x-derby": "cors" };
   return new Response(body, { headers, status });
+}
+
+export function toOptions(): Response {
+  return new Response(null, { headers: corsHeaders });
 }
 
 export function toError(error: string | unknown, status = 400): Response {
