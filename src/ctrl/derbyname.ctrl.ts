@@ -26,7 +26,8 @@ export const derbyNameController = {
 
     return utils.toJSON(derbyNames.map(d => ({
       name: d.name,
-      numRoster: d.numRoster
+      numRoster: d.numRoster,
+      club: d?.club?.name
     })))
 
   },
@@ -52,6 +53,21 @@ export const derbyNameController = {
       id: _club.id
     }
 
+    
+    const client = await utils.getClient(env, App)
+    if (!client)
+      return utils.toError("problème connexion MdB", 500)
+
+
+    const collection = client.db(env.DB_NAME).collection<Derbyname>(DERBYNAMES)
+
+    // ====== Vérification de l'unicité du nom ======
+    const derbyNamesExist = await collection.count({
+      name
+    })
+
+    if (derbyNamesExist) return utils.toError("nom déjà pris", 400)
+
     const generatedCode = Math.floor(100000 + Math.random() * 900000).toString() 
     const player = { name, numRoster, email,club, emailConfirmed: false, generatedCode  }
 
@@ -72,10 +88,6 @@ export const derbyNameController = {
       .setExpirationTime('5m')
       .encrypt(secret)
 
-    const client = await utils.getClient(env, App)
-    if (!client)
-      return utils.toError("problème connexion MdB", 500)
-    const collection = client.db(env.DB_NAME).collection<Derbyname>(DERBYNAMES)
     const newName = await collection.insertOne(player)
 
     await sendEmail({

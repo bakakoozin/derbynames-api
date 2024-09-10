@@ -21,27 +21,27 @@ export const validatedEmailController = {
     try {
      const { payload } = await jose.jwtDecrypt(body.token, secret)
 
-     console.log(payload)
     const client = await utils.getClient(env, App)
     if (!client)
       return utils.toError("problème connexion MdB", 500)
 
     const collection = client.db(env.DB_NAME).collection(DERBYNAMES)
 
-    const derbyNames = await collection.find({
+    const [derbyName] = await collection.find({
       generatedCode : payload.generatedCode
     })
 
-    if(derbyNames.length === 0)
+      if (derbyName.length === 0)
       return utils.toError("code invalide", 400)
 
-    await collection.updateOne({ _id: derbyNames[0]._id }, { $set: { emailConfirmed: true, generatedCode: null } })
+      await collection.updateOne({ _id: derbyName._id }, { $set: { emailConfirmed: true, generatedCode: null } })
 
-    return utils.toJSON(derbyNames.map(d => ({
-      name: d.name,
-      numRoster: d.numRoster,
-      slug: d.name.toLowerCase().replace(/ /g, "-")
-    }))[0])
+  // delete all other entries with the same email
+      await collection.deleteMany({ email: derbyName.email, _id: { $ne: derbyName._id } })
+      
+      return utils.toJSON({
+        name: derbyName.name,
+      })
     }
     catch (e) {
       console.error(e)
