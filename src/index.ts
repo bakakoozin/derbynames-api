@@ -14,8 +14,8 @@ let App: Realm.App;
 const worker: ExportedHandler<ExportedHandlerType> = {
   async fetch(req, env) {
     const url = new URL(req.url);
+    console.log(await env.derbyname.list())
 
-  
     App = App || new Realm.App(env.ATLAS_APPID);
 
     const method = req.method;

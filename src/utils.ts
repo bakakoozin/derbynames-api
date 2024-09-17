@@ -16,6 +16,13 @@ export interface ExportedHandlerType {
   EMAIL_API_FROM: string
   DB_NAME: string
   JWT_SECRET: string
+  derbyname: {
+    put: (key:string,data: string) => Promise<string>
+    get: (query: string) => Promise<string>
+    list: () => Promise<string[]>
+    delete: (query: string) => Promise<string>
+  }
+  
 }
 
 

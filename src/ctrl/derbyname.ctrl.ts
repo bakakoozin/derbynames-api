@@ -2,36 +2,24 @@ import { Buffer } from 'node:buffer';
 import type { ObjectId } from "mongodb"
 import type { ExportedHandlerType } from "../utils"
 import * as utils from "../utils"
-import * as Realm from 'realm-web';
 import * as jose from 'jose'
 import { sendEmail } from "../emails/sender"
 
-const DERBYNAMES = "derbynames"
 
 export type Derbyname = { _id: ObjectId, name: string, numRoster: string, email: string, club: { name: string, id: string }, emailConfirmed: boolean }
 
 export const derbyNameController = {
 
-  async GET(_req: Request, env: ExportedHandlerType, App: Realm.App) {
+  async GET(_req: Request, env: ExportedHandlerType) {
 
-    const client = await utils.getClient(env, App)
-    if (!client)
-      return utils.toError("problème connexion MdB", 500)
 
-    const collection = client.db(env.DB_NAME).collection(DERBYNAMES)
+    const derbyNamesStr = await env.derbyname.get('names') || '[]'
+    const derbyNames =  JSON.parse(derbyNamesStr) 
 
-    const derbyNames = await collection.find({
-      emailConfirmed: true
-    })
-
-    return utils.toJSON(derbyNames.map(d => ({
-      name: d.name,
-      numRoster: d.numRoster,
-      club: d?.club?.name
-    })))
+    return utils.toJSON(derbyNames.map((dn: Derbyname) => ({ name: dn.name, numRoster: dn.numRoster, email: dn.email, club: dn.club.name })))
 
   },
-  async POST(req: Request, env: ExportedHandlerType, App: Realm.App) {
+  async POST(req: Request, env: ExportedHandlerType) {
     const body = await req.json() as Derbyname
 
     const { name: _name, numRoster: _numRoster, email: _email, club:_club } = body
@@ -53,23 +41,12 @@ export const derbyNameController = {
       id: _club.id
     }
 
-    
-    const client = await utils.getClient(env, App)
-    if (!client)
-      return utils.toError("problème connexion MdB", 500)
-
-
-    const collection = client.db(env.DB_NAME).collection<Derbyname>(DERBYNAMES)
-
-    // ====== Vérification de l'unicité du nom ======
-    const derbyNamesExist = await collection.count({
-      name
-    })
+  const derbyNamesExist =  await env.derbyname.get(name.trim().toLowerCase());
 
     if (derbyNamesExist) return utils.toError("nom déjà pris", 400)
 
     const generatedCode = Math.floor(100000 + Math.random() * 900000).toString() 
-    const player = { name, numRoster, email,club, emailConfirmed: false, generatedCode  }
+    const player = { name, numRoster, email ,club   }
 
     if (!isNameValid || !isNumRosterValid || !isEmailValid || !club)
       return utils.toError("données invalides", 400)
@@ -85,10 +62,12 @@ export const derbyNameController = {
       .setIssuedAt()
       .setIssuer('derbynames.ovh_back')
       .setAudience('derbynames.ovh_front')
-      .setExpirationTime('5m')
+      .setExpirationTime('15m')
       .encrypt(secret)
 
-    const newName = await collection.insertOne(player)
+    await env.derbyname.put(name.trim().toLowerCase(), email);
+    await env.derbyname.put(email, JSON.stringify(player));
+    await env.derbyname.put(`gen_${generatedCode}`, email);
 
     await sendEmail({
       env,
@@ -111,7 +90,7 @@ export const derbyNameController = {
     // ====================================
 
 
-    return utils.toJSON({ newName })
+    return utils.toJSON({ player })
   }
 }
 
