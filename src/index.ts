@@ -1,4 +1,3 @@
-import * as Realm from 'realm-web';
 import * as utils from './utils';
 import { derbyNameController } from './ctrl/derbyname.ctrl';
 import { indexCtrl } from './ctrl/index.ctrl';
@@ -8,15 +7,10 @@ import type { ExportedHandlerType , Router} from './utils';
 import { checkUsed } from './ctrl/check-used.ctrl';
 
 
-let App: Realm.App;
-
-
 const worker: ExportedHandler<ExportedHandlerType> = {
   async fetch(req, env) {
     const url = new URL(req.url);
-    console.log(await env.derbyname.list())
-
-    App = App || new Realm.App(env.ATLAS_APPID);
+  
 
     const method = req.method;
     const path = url.pathname.replace(/[/]$/, '');
@@ -31,7 +25,7 @@ const worker: ExportedHandler<ExportedHandlerType> = {
       "/check_used": checkUsed,
     }
     const controller = router?.[path]?.[method]
-    return typeof controller === "function" ? await controller(req, env, App) : utils.toError("not found", 404)
+    return typeof controller === "function" ? await controller(req, env) : utils.toError("not found", 404)
   }
 }
 

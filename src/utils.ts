@@ -1,16 +1,5 @@
-import * as Realm from 'realm-web';
-
-
-
 // ===== TYPES ================================================================
-
-export type Document = globalThis.Realm.Services.MongoDB.Document;
-export const ObjectId = Realm.BSON.ObjectID;
-
 export interface ExportedHandlerType {
-  // MongoDB Atlas Application ID
-  ATLAS_APPID: string;
-  ATLAS_TOKEN: string
   EMAIL_API_KEY: string
   EMAIL_API_URL: string
   EMAIL_API_FROM: string
@@ -21,12 +10,11 @@ export interface ExportedHandlerType {
     get: (query: string) => Promise<string>
     list: () => Promise<string[]>
     delete: (query: string) => Promise<string>
-  }
-  
+  } 
 }
 
 
-export type Router = Record<string, Record<string, (req: Request, env: ExportedHandlerType, App: Realm.App) => Promise<Response>>>;
+export type Router = Record<string, Record<string, (req: Request, env: ExportedHandlerType) => Promise<Response>>>;
 // ===== CONST  ================================================================
 
 
@@ -56,17 +44,4 @@ export function toError(error: string | unknown, status = 400): Response {
 export function reply(output: unknown): Response {
   if (output != null) return toJSON(output, 200);
   return toError('Error with query', 500);
-}
-
-export async function getClient(env: ExportedHandlerType, App: Realm.App) {
-
-  try {
-    const credentials = Realm.Credentials.apiKey(env.ATLAS_TOKEN);
-    // Attempt to authenticate
-    const user = await App.logIn(credentials);
-    return user.mongoClient('mongodb-atlas');
-  } catch (err) {
-    console.log(err)
-    return undefined;
-  }
 }

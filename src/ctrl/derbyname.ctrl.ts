@@ -1,21 +1,18 @@
 import { Buffer } from 'node:buffer';
-import type { ObjectId } from "mongodb"
 import type { ExportedHandlerType } from "../utils"
 import * as utils from "../utils"
 import * as jose from 'jose'
 import { sendEmail } from "../emails/sender"
 
 
-export type Derbyname = { _id: ObjectId, name: string, numRoster: string, email: string, club: { name: string, id: string }, emailConfirmed: boolean }
+export type Derbyname = {  name: string, numRoster: string, email: string, club: { name: string, id: string }, emailConfirmed: boolean }
 
 export const derbyNameController = {
 
   async GET(_req: Request, env: ExportedHandlerType) {
 
-
     const derbyNamesStr = await env.derbyname.get('names') || '[]'
     const derbyNames =  JSON.parse(derbyNamesStr) 
-
     return utils.toJSON(derbyNames.map((dn: Derbyname) => ({ name: dn.name, numRoster: dn.numRoster, email: dn.email, club: dn.club.name })))
 
   },
@@ -75,14 +72,14 @@ export const derbyNameController = {
         email,
         name
       }],
-      subject: "Hello world !",
+      subject: "DERBY NAME !",
       html: `<html><head></head><body>
       <h1>DERBY NAMES</h1>
       <h2>Confirmation de votre adresse email</h2>
       <p>Bonjour ${name},</p>
       <p>Vous avez récemment demandé à vous inscrire sur notre site. Pour confirmer votre adresse email, veuillez cliquer sur
       le lien ci-dessous :</p>
-      <a href="http://derbynames.ovh/validate/${jwt}">Confirmer mon adresse email</a>
+      <a href="https://derbynames.ovh/validate/${jwt}">Confirmer mon adresse email</a>
       </body></html>`
     })
 
