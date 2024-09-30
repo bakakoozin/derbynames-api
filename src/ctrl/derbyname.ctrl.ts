@@ -54,6 +54,10 @@ export const derbyNameController = {
 
     // ====== Génération du token JWT ======
     const secret = Buffer.from(env.JWT_SECRET, 'hex')
+
+    if (!/^[a-fA-F0-9]+$/.test(env.JWT_SECRET)) {
+      return utils.toError("Invalid JWT secret", 500);
+    }
     
     const jwt = await new jose.EncryptJWT({
       generatedCode
@@ -92,7 +96,7 @@ export const derbyNameController = {
 
     return utils.toJSON({ player })
    } catch (e) {
-    return utils.toError(e, 500)
+    return utils.toError({error:e}, 500)
   }
 }
 }
