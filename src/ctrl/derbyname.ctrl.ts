@@ -17,6 +17,7 @@ export const derbyNameController = {
 
   },
   async POST(req: Request, env: ExportedHandlerType) {
+   try{
     const body = await req.json() as Derbyname
 
     const { name: _name, numRoster: _numRoster, email: _email, club:_club } = body
@@ -34,8 +35,8 @@ export const derbyNameController = {
     const email = _email.trim()
     const numRoster = _numRoster.trim()
     const club = {
-      name: _club.name,
-      id: _club.id
+      name: _club?.name,
+      id: _club?.id
     }
 
   const derbyNamesExistStr =  await env.derbyname.get(name.trim().toLowerCase());
@@ -90,6 +91,11 @@ export const derbyNameController = {
 
 
     return utils.toJSON({ player })
+   } catch (e) {
+    console.error(e)
+    return utils.toError(e, 500)
+
   }
+}
 }
 
