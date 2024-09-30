@@ -92,9 +92,7 @@ export const derbyNameController = {
 
     return utils.toJSON({ player })
    } catch (e) {
-    console.error(e)
     return utils.toError(e, 500)
-
   }
 }
 }
