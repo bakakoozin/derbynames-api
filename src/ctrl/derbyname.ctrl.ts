@@ -38,12 +38,14 @@ export const derbyNameController = {
       id: _club.id
     }
 
-  const derbyNamesExist =  await env.derbyname.get(name.trim().toLowerCase());
+  const derbyNamesExistStr =  await env.derbyname.get(name.trim().toLowerCase());
 
-    if (derbyNamesExist) return utils.toError("nom déjà pris", 400)
+  const derbyNamesExist = derbyNamesExistStr ? JSON.parse(await env.derbyname.get(derbyNamesExistStr)) : null
+
+    if (derbyNamesExist?.emailConfirmed) return utils.toError("nom déjà pris", 400)
 
     const generatedCode = Math.floor(100000 + Math.random() * 900000).toString() 
-    const player = { name, numRoster, email ,club   }
+    const player = { name, numRoster, email ,club, emailConfirmed: false  }
 
     if (!isNameValid || !isNumRosterValid || !isEmailValid || !club)
       return utils.toError("données invalides", 400)
@@ -59,7 +61,7 @@ export const derbyNameController = {
       .setIssuedAt()
       .setIssuer('derbynames.ovh_back')
       .setAudience('derbynames.ovh_front')
-      .setExpirationTime('15m')
+      .setExpirationTime('20m')
       .encrypt(secret)
 
     await env.derbyname.put(name.trim().toLowerCase(), email);
@@ -77,10 +79,10 @@ export const derbyNameController = {
       <h1>DERBY NAMES</h1>
       <h2>Confirmation de votre adresse email</h2>
       <p>Bonjour ${name},</p>
-      <p>Vous avez récemment demandé à vous inscrire sur notre site. Pour confirmer votre adresse email, veuillez cliquer sur
-      le lien ci-dessous :</p>
-      <a href="https://derbynames.ovh/validate/${jwt}">Confirmer mon adresse email</a>
-      </body></html>`
+      <p>Vous avez récemment demandé à valider votre derbyname sur notre site. Pour confirmer votre adresse email et valider votre derbyname, veuillez cliquer sur le lien ci-dessous :</p>
+      <a href="https://derbynames.ovh/validate/${jwt}">Confirmer mon adresse email et valider mon derbyname</a>
+      </body></html>
+`
     })
 
 

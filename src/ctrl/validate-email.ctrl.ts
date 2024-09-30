@@ -26,6 +26,12 @@ export const validatedEmailController = {
       const namesStr = await env.derbyname.get('names') || '[]'
       const names: any = JSON.parse(namesStr) as string[]
 
+      await env.derbyname.put(player.name, JSON.stringify({
+        ...player,
+        email,
+        emailConfirmed: false  
+      }))
+
     await env.derbyname.put('names', JSON.stringify([...names.filter((n:any)=>n.name !== player.name ), {
       name: player.name,
       numRoster: player.numRoster,
