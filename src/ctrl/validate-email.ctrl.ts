@@ -29,7 +29,7 @@ export const validatedEmailController = {
       await env.derbyname.put(player.name, JSON.stringify({
         ...player,
         email,
-        emailConfirmed: false  
+        emailConfirmed: true  
       }))
 
     await env.derbyname.put('names', JSON.stringify([...names.filter((n:any)=>n.name !== player.name ), {
